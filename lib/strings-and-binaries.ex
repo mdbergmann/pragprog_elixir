@@ -68,24 +68,17 @@ defmodule StringsAndBinaries do
   # Strings and binaries - 7
 
   def read_tax_file(path) do
-    Stream.resource(
-      fn -> File.open!(path) end,
-      fn file ->
-        case IO.read(file, :line) do
-          <<line::binary>> -> process_line(line)
-          _ -> []
-        end
-      end,
-      fn file -> File.close(file) end)
+    File.stream!(path)
+    |> Enum.map(&(process_line(&1)))
   end
 
   defp process_line(line) do
-    {id_str, ship_to_str, net_amount_str} = line |> String.split(",") |> List.to_tuple()
+    [id_str, ship_to_str, net_amount_str] = line |> String.trim_trailing("\n") |> String.split(",")
 
     [id: String.to_integer(id_str),
-     ship_to: String.to_atom(String.trim_leading(ship_to_str, ":")),
+     ship_to: ship_to_str |> String.trim_leading(":") |> String.to_atom(),
      net_amount: String.to_float(net_amount_str)]
-  end  
+  end
   
 end
 
